@@ -13,6 +13,9 @@ interface ToppingDao {
     @Query("SELECT * FROM toppings")
     fun getAll(): Flow<List<Topping>>
 
+    @Query("SELECT * FROM toppings WHERE id = :id")
+    suspend fun getById(id: Int): Topping?
+
     @Insert
     suspend fun add(topping: Topping)
 
@@ -21,7 +24,4 @@ interface ToppingDao {
 
     @Delete
     suspend fun delete(topping: Topping)
-
-    @Query("SELECT * FROM toppings WHERE id = :id")
-    suspend fun getById(id: Int): Topping?
 }
