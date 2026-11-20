@@ -13,6 +13,9 @@ interface ScoopDao {
     @Query("SELECT * FROM scoops")
     fun getAll(): Flow<List<Scoop>>
 
+    @Query("SELECT * FROM scoops WHERE id = :id")
+    suspend fun getById(id: Int): Scoop?
+
     @Insert
     suspend fun add(scoop: Scoop)
 
@@ -21,7 +24,4 @@ interface ScoopDao {
 
     @Delete
     suspend fun delete(scoop: Scoop)
-
-    @Query("SELECT * FROM scoops WHERE id = :id")
-    suspend fun getById(id: Int): Scoop?
 }

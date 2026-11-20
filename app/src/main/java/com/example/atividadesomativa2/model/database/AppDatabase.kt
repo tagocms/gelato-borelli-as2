@@ -13,9 +13,18 @@ import com.example.atividadesomativa2.model.entity.IceCream
 import com.example.atividadesomativa2.model.entity.Order
 import com.example.atividadesomativa2.model.entity.Scoop
 import com.example.atividadesomativa2.model.entity.Topping
+import com.example.atividadesomativa2.model.entity.crossreference.IceCreamScoopCrossRef
+import com.example.atividadesomativa2.model.entity.crossreference.IceCreamToppingCrossRef
 
 @Database(
-    entities = [IceCream::class, Order::class, Scoop::class, Topping::class],
+    entities = [
+        IceCream::class,
+        Order::class,
+        Scoop::class,
+        Topping::class,
+        IceCreamScoopCrossRef::class,
+        IceCreamToppingCrossRef::class
+    ],
     version = 1
 )
 @ColumnTypeConverters(Converters::class)
