@@ -58,4 +58,6 @@ dependencies {
     ksp(libs.androidx.room3.compiler)
 
     implementation(libs.androidx.navigation.compose)
+
+    implementation(libs.compose.colorpicker)
 }
