@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,8 +25,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.contentType
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.atividadesomativa2.R
@@ -91,39 +96,55 @@ fun ScoopItem(
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.padding(12.dp)
+        modifier = Modifier.padding(12.dp).fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .background(scoop.color)
-                .clip(CircleShape)
-        )
-
-        Text(
-            "Sabor: ${scoop.flavor}",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Row {
-            Button(
-                onClick = onEdit
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Editar")
+                ScoopDrawing(scoop.color)
+
+                Spacer(Modifier.width(8.dp))
+
+                Text(
+                    scoop.flavor,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
 
-            Button(
-                onClick = onDelete,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Excluir")
+            Spacer(Modifier.height(8.dp))
+
+            Row {
+                Button(
+                    onClick = onEdit
+                ) {
+                    Text("Editar")
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Excluir")
+                }
             }
         }
     }
+}
+
+@Composable
+fun ScoopDrawing(color: Color, size: Int = 50) {
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .clip(CircleShape)
+            .background(color)
+    )
 }

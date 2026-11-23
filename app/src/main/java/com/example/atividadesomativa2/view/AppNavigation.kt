@@ -6,7 +6,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.atividadesomativa2.view.orders.OrdersListScreen
+import com.example.atividadesomativa2.view.scoops.ScoopUpdateScreen
 import com.example.atividadesomativa2.view.scoops.ScoopsListScreen
+import com.example.atividadesomativa2.view.toppings.ToppingUpdateScreen
 import com.example.atividadesomativa2.view.toppings.ToppingsListScreen
 import com.example.atividadesomativa2.viewmodel.OrderViewModel
 import com.example.atividadesomativa2.viewmodel.ScoopViewModel
@@ -16,6 +18,8 @@ import com.example.atividadesomativa2.viewmodel.ToppingViewModel
 fun AppNavigation() {
     val navController = rememberNavController()
     val orderViewModel: OrderViewModel = viewModel()
+    val scoopsViewModel: ScoopViewModel = viewModel()
+    val toppingViewModel: ToppingViewModel = viewModel()
 
     NavHost(
         navController, "orders"
@@ -42,8 +46,6 @@ fun AppNavigation() {
         }
 
         composable("scoops") {
-            val scoopsViewModel: ScoopViewModel = viewModel()
-
             ScoopsListScreen(
                 viewModel = scoopsViewModel,
                 onNewScoop = { navController.navigate("scoops/") },
@@ -54,21 +56,31 @@ fun AppNavigation() {
 
         composable("scoops/{scoopId}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("scoopId")?.toIntOrNull()
+
+            ScoopUpdateScreen(
+                viewModel = scoopsViewModel,
+                scoopId = id,
+                onGoBack = { navController.popBackStack() }
+            )
         }
 
         composable("toppings") {
-            val toppingViewModel: ToppingViewModel = viewModel()
-
             ToppingsListScreen(
                 viewModel = toppingViewModel,
-                onNewTopping = { navController.navigate("scoops/") },
-                onToppingUpdate = { id -> navController.navigate("scoops/$id") },
+                onNewTopping = { navController.navigate("toppings/") },
+                onToppingUpdate = { id -> navController.navigate("toppings/$id") },
                 onGoBack = { navController.popBackStack() }
             )
         }
 
         composable("toppings/{toppingId}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("toppingId")?.toIntOrNull()
+
+            ToppingUpdateScreen(
+                viewModel = toppingViewModel,
+                toppingId = id,
+                onGoBack = { navController.popBackStack() }
+            )
         }
     }
 }
