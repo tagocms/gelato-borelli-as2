@@ -65,7 +65,7 @@ class ToppingViewModel(application: Application): AndroidViewModel(application) 
         }
     }
 
-    private fun getById(id: Int): Topping? {
+    fun getById(id: Int): Topping? {
         return toppings.find { it.id == id }
     }
 }

@@ -65,7 +65,7 @@ class ScoopViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
-    private fun getById(id: Int): Scoop? {
+    fun getById(id: Int): Scoop? {
         return scoops.find { it.id == id }
     }
 }
