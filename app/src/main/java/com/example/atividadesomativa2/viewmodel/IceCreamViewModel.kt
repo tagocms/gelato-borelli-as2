@@ -14,11 +14,11 @@ import com.example.atividadesomativa2.model.repository.ScoopRepository
 import com.example.atividadesomativa2.model.repository.ToppingRepository
 import kotlinx.coroutines.launch
 
-class IceCreamViewModel(application: Application, private val orderId: Int): AndroidViewModel(application) {
+class IceCreamViewModel(application: Application): AndroidViewModel(application) {
     private val repository: IceCreamRepository
-    var scoops = mutableStateListOf<Scoop>()
+    var allScoops = mutableStateListOf<Scoop>()
         private set
-    var toppings = mutableStateListOf<Topping>()
+    var allToppings = mutableStateListOf<Topping>()
         private set
 
     init {
@@ -35,12 +35,12 @@ class IceCreamViewModel(application: Application, private val orderId: Int): And
     private fun loadInitialData(scoopRepository: ScoopRepository, toppingRepository: ToppingRepository) {
         viewModelScope.launch {
             scoopRepository.getAll().collect { list ->
-                scoops.clear()
-                scoops.addAll(list)
+                allScoops.clear()
+                allScoops.addAll(list)
             }
             toppingRepository.getAll().collect { list ->
-                toppings.clear()
-                toppings.addAll(list)
+                allToppings.clear()
+                allToppings.addAll(list)
             }
         }
     }
@@ -61,7 +61,7 @@ class IceCreamViewModel(application: Application, private val orderId: Int): And
         return repository.isQuantityValid(quantity)
     }
 
-    fun add(toppings: List<Topping>, scoops: List<Scoop>, container: IceCreamContainer, quantity: Int) {
+    fun add(toppings: List<Topping>, orderId: Int, scoops: List<Scoop>, container: IceCreamContainer, quantity: Int) {
         viewModelScope.launch {
             try {
                 repository.add(orderId, scoops, toppings, container, quantity)
@@ -71,7 +71,7 @@ class IceCreamViewModel(application: Application, private val orderId: Int): And
         }
     }
 
-    fun update(id:  Int, toppings: List<Topping>, scoops: List<Scoop>, container: IceCreamContainer, quantity: Int) {
+    fun update(id:  Int, orderId: Int, toppings: List<Topping>, scoops: List<Scoop>, container: IceCreamContainer, quantity: Int) {
         viewModelScope.launch {
             try {
                 repository.update(orderId, id, scoops, toppings, container, quantity)

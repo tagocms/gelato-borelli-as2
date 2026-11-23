@@ -65,4 +65,8 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
             repository.delete(order)
         }
     }
+
+    fun getById(id: Int): OrderWithIceCream? {
+        return orders.find { it.order.id == id }
+    }
 }

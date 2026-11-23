@@ -14,4 +14,13 @@ enum class OrderStatus {
             DELIVERED -> DELIVERED
         }
     }
+
+    override fun toString(): String {
+        return when (this) {
+            PENDING -> "Pendente"
+            PREPARING -> "Preparando"
+            READY -> "Pronto"
+            DELIVERED -> "Entregue"
+        }
+    }
 }

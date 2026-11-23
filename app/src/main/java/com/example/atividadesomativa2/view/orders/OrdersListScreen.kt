@@ -30,7 +30,7 @@ import com.example.atividadesomativa2.viewmodel.OrderViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrdersListScreen(
-    orderViewModel: OrderViewModel,
+    viewModel: OrderViewModel,
     onNewOrder: () -> Unit,
     onOrderUpdate: (Int) -> Unit,
     goToScoops: () -> Unit,
@@ -66,20 +66,20 @@ fun OrdersListScreen(
                 }
             )
         }
-    ) { paddingvalues ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(paddingvalues)
+                .padding(paddingValues)
                 .padding(16.dp)
         ) {
             Spacer(modifier = Modifier.height((16.dp)))
 
             LazyColumn {
-                items(orderViewModel.orders) { order ->
+                items(viewModel.orders) { order ->
                     OrderItem(
                         order = order,
                         onEdit = { onOrderUpdate(order.order.id) },
-                        onDelete = { orderViewModel.delete(order) }
+                        onDelete = { viewModel.delete(order) }
                     )
                 }
             }

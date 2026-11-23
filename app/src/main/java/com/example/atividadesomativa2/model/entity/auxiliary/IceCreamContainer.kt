@@ -18,4 +18,12 @@ enum class IceCreamContainer {
             CONE -> 1
         }
     }
+
+    override fun toString(): String {
+        return when(this) {
+            CUP -> "Copo"
+            CESTINO -> "Cestino"
+            CONE -> "Cascão"
+        }
+    }
 }
