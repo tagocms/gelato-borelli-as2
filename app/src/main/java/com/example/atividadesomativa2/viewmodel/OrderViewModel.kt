@@ -1,9 +1,14 @@
 package com.example.atividadesomativa2.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.atividadesomativa2.model.database.AppDatabase
+import com.example.atividadesomativa2.model.entity.Scoop
+import com.example.atividadesomativa2.model.entity.Topping
+import com.example.atividadesomativa2.model.entity.auxiliary.DraftIceCream
+import com.example.atividadesomativa2.model.entity.auxiliary.IceCreamContainer
 import com.example.atividadesomativa2.model.entity.auxiliary.OrderStatus
 import com.example.atividadesomativa2.model.entity.read.IceCreamWithDetails
 import com.example.atividadesomativa2.model.entity.read.OrderWithIceCream
@@ -12,9 +17,10 @@ import kotlinx.coroutines.launch
 
 class OrderViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: OrderRepository
-    var orders = mutableListOf<OrderWithIceCream>()
+    var orders = mutableStateListOf<OrderWithIceCream>()
         private set
-    var iceCreams = mutableMapOf<Int, List<IceCreamWithDetails>>()
+
+    var draftIceCreams = mutableStateListOf<DraftIceCream>()
         private set
 
     init {
@@ -28,19 +34,84 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
             repository.getAll().collect { list ->
                 orders.clear()
                 orders.addAll(list)
-
-                list.forEach { order ->
-                    iceCreams[order.order.id] = order.iceCreams
-                }
             }
         }
     }
 
-    fun isOrderValid(iceCreams: List<IceCreamWithDetails>, status: OrderStatus?): Boolean {
+    private var initializedOrderId: Int? = null
+
+    fun initDraft(orderId: Int) {
+        if (initializedOrderId == orderId) return
+        initializedOrderId = orderId
+
+        draftIceCreams.clear()
+        val existing = getById(orderId)
+        existing?.iceCreams?.forEach { details ->
+            draftIceCreams.add(
+                DraftIceCream(
+                    id = details.iceCream.id,
+                    container = details.iceCream.container,
+                    quantity = details.iceCream.quantity,
+                    scoops = details.scoops,
+                    toppings = details.toppings
+                )
+            )
+        }
+    }
+
+    fun addDraftIceCream(container: IceCreamContainer, quantity: Int, scoops: List<Scoop>, toppings: List<Topping>) {
+        draftIceCreams.add(
+            DraftIceCream(
+                id = (draftIceCreams.minOfOrNull { it.id } ?: 0) - 1,
+                container = container,
+                quantity = quantity,
+                scoops = scoops,
+                toppings = toppings
+            )
+        )
+    }
+
+    fun updateDraftIceCream(id: Int, container: IceCreamContainer, quantity: Int, scoops: List<Scoop>, toppings: List<Topping>) {
+        val index = draftIceCreams.indexOfFirst { it.id == id }
+        if (index != -1) {
+            draftIceCreams[index] = DraftIceCream(
+                id = id,
+                container = container,
+                quantity = quantity,
+                scoops = scoops,
+                toppings = toppings
+            )
+        }
+    }
+
+    fun removeDraftIceCream(draft: DraftIceCream) {
+        draftIceCreams.remove(draft)
+    }
+
+    fun saveOrderWithDrafts(orderId: Int, status: OrderStatus, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            val appDb = AppDatabase.getDatabase(getApplication())
+            repository.saveOrderWithIceCreams(
+                orderId = orderId,
+                status = status,
+                draftIceCreams = draftIceCreams,
+                iceCreamDao = appDb.iceCreamDao(),
+                orderDao = appDb.orderDao()
+            )
+            resetDraft()
+            onComplete()
+        }
+    }
+
+    fun resetDraft() {
+        initializedOrderId = null
+    }
+
+    fun isOrderValid(iceCreams: List<DraftIceCream>, status: OrderStatus?): Boolean {
         return repository.isOrderValid(iceCreams, status)
     }
 
-    fun isIceCreamsValid(iceCreams: List<IceCreamWithDetails>): Boolean {
+    fun isIceCreamsValid(iceCreams: List<DraftIceCream>): Boolean {
         return repository.isIceCreamsValid(iceCreams)
     }
 
@@ -51,6 +122,13 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
     fun add() {
         viewModelScope.launch {
             repository.add()
+        }
+    }
+
+    fun createOrderAndGetId(onCreated: (Int) -> Unit) {
+        viewModelScope.launch {
+            val id = repository.addAndReturnId().toInt()
+            onCreated(id)
         }
     }
 

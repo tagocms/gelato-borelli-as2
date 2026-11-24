@@ -3,6 +3,7 @@ package com.example.atividadesomativa2.view.orders
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -94,36 +95,40 @@ fun OrderItem(
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.padding(12.dp)
+        modifier = Modifier.padding(12.dp).fillMaxWidth()
     ) {
-        Text(
-            "Id: ${order.order.id}",
-            style = MaterialTheme.typography.titleMedium
-        )
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(
+                "Id: ${order.order.id}",
+                style = MaterialTheme.typography.titleMedium
+            )
 
-        Text(
-            "Status: ${order.order.status}",
-            style = MaterialTheme.typography.bodyMedium
-        )
+            Text(
+                "Status: ${order.order.status}",
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-        Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
-        Row {
-            Button(
-                onClick = onEdit
-            ) {
-                Text("Editar")
-            }
+            Row {
+                Button(
+                    onClick = onEdit
+                ) {
+                    Text("Editar")
+                }
 
-            Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-            Button(
-                onClick = onDelete,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Excluir")
+                Button(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Excluir")
+                }
             }
         }
     }

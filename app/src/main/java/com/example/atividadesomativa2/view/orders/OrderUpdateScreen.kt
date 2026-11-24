@@ -1,6 +1,7 @@
 package com.example.atividadesomativa2.view.orders
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,14 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +26,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,10 +39,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.application
 import com.example.atividadesomativa2.R
 import com.example.atividadesomativa2.model.entity.Scoop
 import com.example.atividadesomativa2.model.entity.Topping
+import com.example.atividadesomativa2.model.entity.auxiliary.DraftIceCream
 import com.example.atividadesomativa2.model.entity.auxiliary.IceCreamContainer
 import com.example.atividadesomativa2.model.entity.auxiliary.OrderStatus
 import com.example.atividadesomativa2.model.entity.read.IceCreamWithDetails
@@ -51,29 +53,30 @@ import com.example.atividadesomativa2.viewmodel.OrderViewModel
 @Composable
 fun OrderUpdateScreen(
     orderViewModel: OrderViewModel,
-    iceCreamViewModel: IceCreamViewModel,
     onNewIceCream: () -> Unit,
     onIceCreamUpdate: (Int) -> Unit,
-    orderId: Int?,
+    orderId: Int,
     onGoBack: () -> Unit
 ) {
-    val orderStatusOptions = listOf(OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY,
-        OrderStatus.DELIVERED)
+    val orderStatusOptions = listOf(OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY, OrderStatus.DELIVERED)
+    LaunchedEffect(orderId) {
+        if (orderId != null) orderViewModel.initDraft(orderId)
+    }
+
     val existingOrder = orderId?.let {
         orderViewModel.getById(it)
     }
 
-    var orderStatus by remember {
+    var orderStatus by remember(existingOrder) {
         mutableStateOf(existingOrder?.order?.status ?: OrderStatus.PENDING)
     }
 
-    var iceCreams by remember {
-        mutableStateOf(existingOrder?.iceCreams ?: emptyList())
+    val iceCreams = orderViewModel.draftIceCreams
+    val isNewDraft = remember(orderId) {
+        (existingOrder?.iceCreams?.size ?: 0) == 0
     }
 
-    val screenTitle = existingOrder?.let {
-        "Editar Pedido"
-    } ?: "Novo Pedido"
+    val screenTitle = if (!isNewDraft) "Editar Pedido" else "Novo Pedido"
 
     Scaffold(
         topBar = {
@@ -82,7 +85,13 @@ fun OrderUpdateScreen(
                     Text(text = screenTitle, style = MaterialTheme.typography.headlineMedium)
                 },
                 navigationIcon = {
-                    IconButton(onClick = onGoBack) {
+                    IconButton(onClick = {
+                        if (isNewDraft && existingOrder != null) {
+                            orderViewModel.delete(existingOrder)
+                        }
+                        orderViewModel.resetDraft()
+                        onGoBack()
+                    }) {
                         Icon(
                             painter = painterResource(id = R.drawable.outline_arrow_back_24),
                             contentDescription = "Voltar"
@@ -96,8 +105,9 @@ fun OrderUpdateScreen(
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            if (existingOrder != null) {
+            if (existingOrder != null && !isNewDraft) {
                 Column {
                     Text(
                         text = "Status do pedido",
@@ -132,7 +142,10 @@ fun OrderUpdateScreen(
 
             Column {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = "Sorvetes do pedido",
@@ -141,19 +154,18 @@ fun OrderUpdateScreen(
                     IconButton(onClick = onNewIceCream) {
                         Icon(
                             painter = painterResource(id = R.drawable.outline_add_24),
-                            contentDescription = "Adicionar sorvete",
-                            tint = Color.Blue
+                            contentDescription = "Adicionar sorvete"
                         )
                     }
                 }
 
                 if (iceCreams.isNotEmpty()) {
-                    LazyColumn {
-                        items(iceCreams) { iceCream ->
+                    Column {
+                        iceCreams.forEach { iceCream ->
                             IceCreamItem(
                                 iceCream = iceCream,
-                                onEdit = { onIceCreamUpdate(iceCream.iceCream.id) },
-                                onDelete = { iceCreamViewModel.delete(iceCream) }
+                                onEdit = { onIceCreamUpdate(iceCream.id) },
+                                onDelete = { orderViewModel.removeDraftIceCream(iceCream) }
                             )
                         }
                     }
@@ -170,12 +182,9 @@ fun OrderUpdateScreen(
             Button(
                 onClick = {
                     if (orderViewModel.isOrderValid(iceCreams, orderStatus)) {
-                        if (existingOrder != null) {
-                            orderViewModel.update(orderId, orderStatus)
-                        } else {
-                            orderViewModel.add()
+                        orderViewModel.saveOrderWithDrafts(orderId, orderStatus) {
+                            onGoBack()
                         }
-                        onGoBack()
                     }
                 },
                 enabled = orderViewModel.isOrderValid(iceCreams, orderStatus),
@@ -184,7 +193,7 @@ fun OrderUpdateScreen(
                 Text("Salvar")
             }
 
-            if (existingOrder != null) {
+            if (existingOrder != null && !isNewDraft) {
                 Button(
                     onClick = {
                         onGoBack()
@@ -204,7 +213,7 @@ fun OrderUpdateScreen(
 
 @Composable
 fun IceCreamItem(
-    iceCream: IceCreamWithDetails,
+    iceCream: DraftIceCream,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -217,12 +226,12 @@ fun IceCreamItem(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IceCreamDrawing(iceCream.scoops, iceCream.toppings, iceCream.iceCream.container)
+                IceCreamDrawing(iceCream.scoops, iceCream.toppings, iceCream.container)
 
                 Spacer(Modifier.width(8.dp))
 
                 Text(
-                    "${iceCream.iceCream.quantity}",
+                    "${iceCream.quantity}",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -327,8 +336,8 @@ fun IceCreamDrawing(
                             val angle = (i * 2.0 * Math.PI / scoops.size).toFloat()
                             scoopCenters.add(
                                 androidx.compose.ui.geometry.Offset(
-                                    w * 0.5f + (w * 0.15f * kotlin.math.cos(angle)).toFloat(),
-                                    h * 0.35f + (h * 0.15f * kotlin.math.sin(angle)).toFloat()
+                                    w * 0.5f + (w * 0.15f * kotlin.math.cos(angle)),
+                                    h * 0.35f + (h * 0.15f * kotlin.math.sin(angle))
                                 )
                             )
                         }

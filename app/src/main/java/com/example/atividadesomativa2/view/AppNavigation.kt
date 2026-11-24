@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.atividadesomativa2.view.orders.IceCreamUpdateScreen
 import com.example.atividadesomativa2.view.orders.OrderUpdateScreen
 import com.example.atividadesomativa2.view.orders.OrdersListScreen
 import com.example.atividadesomativa2.view.scoops.ScoopUpdateScreen
@@ -30,7 +31,11 @@ fun AppNavigation() {
         composable("orders") {
             OrdersListScreen(
                 viewModel = orderViewModel,
-                onNewOrder = { navController.navigate("orders/") },
+                onNewOrder = {
+                    orderViewModel.createOrderAndGetId { newId ->
+                        navController.navigate("orders/$newId")
+                    }
+                },
                 onOrderUpdate = { id -> navController.navigate("orders/$id") },
                 goToScoops = { navController.navigate("scoops") },
                 goToToppings = { navController.navigate("toppings") }
@@ -40,20 +45,44 @@ fun AppNavigation() {
         composable("orders/{orderId}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("orderId")?.toIntOrNull()
 
-            OrderUpdateScreen(
-                orderViewModel = orderViewModel,
-                iceCreamViewModel = iceCreamViewModel,
-                orderId = id,
-                onNewIceCream = { navController.navigate("orders/$id/") },
-                onIceCreamUpdate = { iceCreamId -> navController.navigate("orders/$id/$iceCreamId") },
-                onGoBack = { navController.popBackStack() }
-            )
+            id?.let {
+                OrderUpdateScreen(
+                    orderViewModel = orderViewModel,
+                    orderId = it,
+                    onNewIceCream = { navController.navigate("orders/$id/new") },
+                    onIceCreamUpdate = { iceCreamId -> navController.navigate("orders/$id/$iceCreamId") },
+                    onGoBack = { navController.popBackStack() }
+                )
+            }
+        }
+
+        composable("orders/{orderId}/new") { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull()
+
+            orderId?.let {
+                IceCreamUpdateScreen(
+                    iceCreamViewModel = iceCreamViewModel,
+                    orderViewModel = orderViewModel,
+                    orderId = it,
+                    iceCreamId = null,
+                    onGoBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable("orders/{orderId}/{iceCreamId}") { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull()
             val iceCreamId = backStackEntry.arguments?.getString("iceCreamId")?.toIntOrNull()
 
+            orderId?.let {
+                IceCreamUpdateScreen(
+                    iceCreamViewModel = iceCreamViewModel,
+                    orderViewModel = orderViewModel,
+                    orderId = it,
+                    iceCreamId = iceCreamId,
+                    onGoBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable("scoops") {

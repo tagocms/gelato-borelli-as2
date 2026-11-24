@@ -20,6 +20,7 @@ class IceCreamViewModel(application: Application): AndroidViewModel(application)
         private set
     var allToppings = mutableStateListOf<Topping>()
         private set
+    var allIceCreams = mutableStateListOf<IceCreamWithDetails>()
 
     init {
         val iceCreamDao = AppDatabase.getDatabase(application).iceCreamDao()
@@ -38,9 +39,19 @@ class IceCreamViewModel(application: Application): AndroidViewModel(application)
                 allScoops.clear()
                 allScoops.addAll(list)
             }
+        }
+
+        viewModelScope.launch {
             toppingRepository.getAll().collect { list ->
                 allToppings.clear()
                 allToppings.addAll(list)
+            }
+        }
+
+        viewModelScope.launch {
+            repository.getAll().collect { list ->
+                allIceCreams.clear()
+                allIceCreams.addAll(list)
             }
         }
     }
@@ -61,7 +72,7 @@ class IceCreamViewModel(application: Application): AndroidViewModel(application)
         return repository.isQuantityValid(quantity)
     }
 
-    fun add(toppings: List<Topping>, orderId: Int, scoops: List<Scoop>, container: IceCreamContainer, quantity: Int) {
+    fun add(orderId: Int, toppings: List<Topping>, scoops: List<Scoop>, container: IceCreamContainer, quantity: Int) {
         viewModelScope.launch {
             try {
                 repository.add(orderId, scoops, toppings, container, quantity)
@@ -85,5 +96,9 @@ class IceCreamViewModel(application: Application): AndroidViewModel(application)
         viewModelScope.launch {
             repository.delete(iceCreamWithDetails)
         }
+    }
+
+    fun getById(id: Int): IceCreamWithDetails? {
+        return allIceCreams.find { it.iceCream.id == id }
     }
 }
